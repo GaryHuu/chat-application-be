@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 
 const Conversation = require('../models/ConversationModel')
 const Message = require('../models/MessageModel')
+const User = require('../models/UserModel')
 
 type ConversationControllerType = {
   getMessages: (req: Request, res: Response) => Promise<void>
@@ -29,9 +30,26 @@ const conversationsController: ConversationControllerType = {
       }
 
       const messagesId = conversation.messagesId || []
-      const messageData = await Message.find({ _id: { $in: messagesId } })
+      let messagesData = await Message.find({ _id: { $in: messagesId } })
 
-      res.status(200).json(messageData.reverse())
+      const usersRequests = messagesData.map((user) =>
+        User.findById(user?.fromUserId)
+      )
+
+      const usersResponse = await Promise.all(usersRequests)
+
+      messagesData = messagesData.map((message, idx) => {
+        return {
+          ...JSON.parse(JSON.stringify(message)),
+          user: {
+            name: usersResponse[idx].name,
+            id: usersResponse[idx]._id,
+            avatarURL: usersResponse[idx].avatarURL,
+          },
+        }
+      })
+
+      res.status(200).json(messagesData)
     } catch (error) {
       res.status(500).json({ msg: error.message })
     }
@@ -60,8 +78,18 @@ const conversationsController: ConversationControllerType = {
         content,
       })
 
-      const newMessageSaved = await newMessage.save()
+      let newMessageSaved = await newMessage.save()
       const newMessageSavedId = newMessageSaved.id
+
+      const { _id, name, avatarURL } = await User.findById(fromUserId)
+      newMessageSaved = {
+        ...JSON.parse(JSON.stringify(newMessageSaved)),
+        user: {
+          id: _id,
+          name,
+          avatarURL,
+        },
+      }
 
       conversation.messagesId.unshift(newMessageSavedId)
       await conversation.save()
@@ -69,15 +97,17 @@ const conversationsController: ConversationControllerType = {
       if (responseLongPolling?.[conversationId]) {
         const { [fromUserId]: _, ...responseLongPollingNotCurrentUser } =
           responseLongPolling?.[conversationId]
-        const listRequest = Object.values(responseLongPollingNotCurrentUser)
-        listRequest.forEach((response) => {
-          response.status(200).json(newMessageSaved)
+        const listKeyOfResponse = Object.keys(responseLongPollingNotCurrentUser)
+        listKeyOfResponse.forEach((key) => {
+          const response = responseLongPollingNotCurrentUser?.[key]
+          if (response) {
+            response.status(200).json(newMessageSaved)
+            delete responseLongPolling?.[conversationId]?.[key]
+          }
         })
       }
 
       res.status(200).json(newMessageSaved)
-
-      // Tao message => luu db => Tra ve success => Tra ve cho user khac
     } catch (error) {
       res.status(500).json({ msg: error.message })
     }

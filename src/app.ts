@@ -26,5 +26,4 @@ app.use('/api/users', userRouter)
 app.use('/api/conversations', conversationRouter)
 app.use('/api/messages', messageRouter)
 app.use('/api/groups', groupRouter)
-
 export {}

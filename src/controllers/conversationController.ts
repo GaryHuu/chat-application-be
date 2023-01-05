@@ -22,6 +22,7 @@ const conversationsController: ConversationControllerType = {
   getMessages: async (req, res) => {
     try {
       const { conversationId } = req.params
+      const { lastMessageId } = req.query
       const conversation = await Conversation.findById(conversationId)
 
       if (!conversation) {
@@ -29,7 +30,19 @@ const conversationsController: ConversationControllerType = {
         return
       }
 
-      const messagesId = conversation.messagesId || []
+      const messagesIdOfConversation = conversation.messagesId || []
+      let messagesId = messagesIdOfConversation
+
+      if (lastMessageId) {
+        const index = messagesIdOfConversation.findIndex(
+          (id) => id === lastMessageId
+        )
+
+        if (index >= 0) {
+          messagesId = messagesIdOfConversation.slice(0, index)
+        }
+      }
+
       let messagesData = await Message.find({ _id: { $in: messagesId } })
 
       const usersRequests = messagesData.map((user) =>

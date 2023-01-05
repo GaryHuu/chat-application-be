@@ -9,7 +9,12 @@ const groupRouter = require('./router/groupRouter')
 
 const app = express()
 const cors = require('cors')
-app.use(cors())
+app.use(
+  cors({
+    origin: '*',
+  })
+)
+
 app.use(express.json())
 
 const MONGOOSE_URL: string = process.env.MONGOOSE_URL

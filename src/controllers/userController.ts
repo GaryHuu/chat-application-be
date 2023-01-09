@@ -82,7 +82,10 @@ const usersController: UserControllerType = {
       friendsOfUser = friendsOfUser?.friends || []
       const friendsId = friendsOfUser.map((fr) => fr?.userId)
 
-      const friendsOfUserDetail = await User.find({ _id: { $in: friendsId } })
+      const friendsOfUserDetail = await Promise.all(
+        friendsId?.map((id) => User.findById(id))
+      )
+
       const response = friendsOfUserDetail?.map((fr, idx) => {
         return {
           id: friendsOfUser[idx]?.userId,
@@ -103,7 +106,9 @@ const usersController: UserControllerType = {
       groupsOfUser = groupsOfUser?.groups || []
       const groupsId = groupsOfUser.map((gr) => gr?.groupId)
 
-      let groupsOfUserDetail = await Group.find({ _id: { $in: groupsId } })
+      let groupsOfUserDetail = await Promise.all(
+        groupsId?.map((id) => Group.findById(id))
+      )
 
       const usersInGroupsRequests = groupsOfUserDetail.map((gr) => {
         return User.find({ _id: { $in: gr?.usersId } })

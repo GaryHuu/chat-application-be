@@ -9,10 +9,11 @@ type MessageControllerType = {
 const messageController: MessageControllerType = {
   create: async (req, res) => {
     try {
-      const { fromUserId, content } = req.body
+      const { fromUserId, content, type } = req.body
       const newMessage = new Message({
         fromUserId,
         content,
+        type,
       })
       await newMessage.save()
       res.status(200).json({ msg: 'Create Successfully' })

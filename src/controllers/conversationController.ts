@@ -70,8 +70,8 @@ const conversationsController: ConversationControllerType = {
   chatMessage: async (req, res) => {
     try {
       const { conversationId } = req.params
-      const { fromUserId, content } = req.body
-      if (!conversationId || !fromUserId || !content) {
+      const { fromUserId, content, type } = req.body
+      if (!conversationId || !fromUserId || !content || !type) {
         res.status(400).json({ msg: 'Err' })
       }
 
@@ -89,6 +89,7 @@ const conversationsController: ConversationControllerType = {
       const newMessage = new Message({
         fromUserId,
         content,
+        type,
       })
 
       let newMessageSaved = await newMessage.save()

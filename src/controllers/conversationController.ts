@@ -3,9 +3,11 @@ import { Request, Response } from 'express'
 const Conversation = require('../models/ConversationModel')
 const Message = require('../models/MessageModel')
 const User = require('../models/UserModel')
+const Group = require('../models/GroupModel')
 
 type ConversationControllerType = {
   getMessages: (req: Request, res: Response) => Promise<void>
+  getConversationInfo: (req: Request, res: Response) => Promise<void>
   chatMessage: (req: Request, res: Response) => Promise<void>
   getMessageLongPolling: (req: Request, res: Response) => Promise<void>
 }
@@ -153,6 +155,44 @@ const conversationsController: ConversationControllerType = {
     } catch (error) {
       res.status(500).json({ msg: error.message })
     }
+  },
+  getConversationInfo: async (req, res) => {
+    try {
+      const { conversationId } = req.params
+      const { userId } = req.query
+      if (!conversationId || !userId) {
+        res.status(400).json({ msg: 'Conversation does not exist' })
+        return
+      }
+
+      const user = await User.findById(userId)
+      const objectsOfConversation = [...user?.friends, ...user?.groups]
+      const object = objectsOfConversation.find((cv) => {
+        return cv?.conversationId === conversationId
+      })
+
+      if (object?.userId) {
+        const objectUser = await User.findById(object.userId)
+        res.status(200).json({
+          name: objectUser?.name,
+          avatarURL: objectUser?.avatarURL,
+          conversationId,
+        })
+        return
+      }
+
+      if (object?.groupId) {
+        const objectGr = await Group.findById(object.groupId)
+        res.status(200).json({
+          name: objectGr?.name,
+          avatarURL: objectGr?.avatarURL,
+          conversationId,
+        })
+        return
+      }
+
+      res.status(400).json({ msg: 'Conversation does not exist' })
+    } catch (error) {}
   },
 }
 

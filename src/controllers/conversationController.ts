@@ -131,8 +131,8 @@ const conversationsController: ConversationControllerType = {
   getMessageLongPolling: async (req, res) => {
     try {
       const { conversationId } = req.params
-      const { useId } = req.query
-      if (!conversationId || !useId) {
+      const { userId } = req.query
+      if (!conversationId || !userId) {
         res.status(400).json({ msg: 'Err' })
       }
 
@@ -140,7 +140,7 @@ const conversationsController: ConversationControllerType = {
         responseLongPolling = {
           ...responseLongPolling,
           [conversationId]: {
-            [useId as string]: res,
+            [userId as string]: res,
           },
         }
       } else {
@@ -148,7 +148,7 @@ const conversationsController: ConversationControllerType = {
           ...responseLongPolling,
           [conversationId]: {
             ...responseLongPolling?.[conversationId],
-            [useId as string]: res,
+            [userId as string]: res,
           },
         }
       }

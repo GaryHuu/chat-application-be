@@ -176,7 +176,7 @@ const conversationsController: ConversationControllerType = {
         res.status(200).json({
           name: objectUser?.name,
           avatarURL: objectUser?.avatarURL,
-          conversationId,
+          id: conversationId,
         })
         return
       }
@@ -186,7 +186,7 @@ const conversationsController: ConversationControllerType = {
         res.status(200).json({
           name: objectGr?.name,
           avatarURL: objectGr?.avatarURL,
-          conversationId,
+          Id: conversationId,
         })
         return
       }
